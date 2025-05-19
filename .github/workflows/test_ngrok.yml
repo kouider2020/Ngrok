@@ -21,8 +21,10 @@ jobs:
           cd public
           nohup python3 -m http.server 8080 > ../server.log 2>&1 &
 
-      - name: Install ngrok
+      - name: Install jq and ngrok
         run: |
+          sudo apt update
+          sudo apt install -y jq
           curl -s https://ngrok-agent.s3.amazonaws.com/ngrok.asc | sudo tee /etc/apt/trusted.gpg.d/ngrok.asc >/dev/null
           echo "deb https://ngrok-agent.s3.amazonaws.com buster main" | sudo tee /etc/apt/sources.list.d/ngrok.list
           sudo apt update && sudo apt install -y ngrok
@@ -33,6 +35,12 @@ jobs:
           nohup ngrok http 8080 > ngrok.log 2>&1 &
           sleep 10
           curl http://localhost:4040/api/tunnels | tee tunnels.json
+
+      - name: Print current ngrok URL
+        run: |
+          echo "Fetching latest ngrok tunnel URL..."
+          curl http://localhost:4040/api/tunnels | tee tunnels-latest.json
+          jq -r '.tunnels[0].public_url' tunnels-latest.json
 
       - name: Keep server alive for 10 minutes
         run: |
