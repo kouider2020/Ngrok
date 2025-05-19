@@ -19,13 +19,13 @@ jobs:
           mkdir public
           echo "<h1>Hello from GitHub Actions</h1>" > public/index.html
           cd public
-          nohup python3 -m http.server 8080 &
+          nohup python3 -m http.server 8080 > ../server.log 2>&1 &
 
       - name: Install ngrok
         run: |
           curl -s https://ngrok-agent.s3.amazonaws.com/ngrok.asc | sudo tee /etc/apt/trusted.gpg.d/ngrok.asc >/dev/null
           echo "deb https://ngrok-agent.s3.amazonaws.com buster main" | sudo tee /etc/apt/sources.list.d/ngrok.list
-          sudo apt update && sudo apt install ngrok
+          sudo apt update && sudo apt install -y ngrok
 
       - name: Start ngrok tunnel
         run: |
@@ -33,4 +33,9 @@ jobs:
           nohup ngrok http 8080 > ngrok.log 2>&1 &
           sleep 10
           curl http://localhost:4040/api/tunnels | tee tunnels.json
+
+      - name: Keep server alive for 10 minutes
+        run: |
+          echo "Server and ngrok tunnel will stay alive for 10 minutes..."
+          sleep 600
           
