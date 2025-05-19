@@ -1,0 +1,36 @@
+name: Hello World with Ngrok
+
+on:
+  workflow_dispatch:
+
+jobs:
+  serve:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Say Hello
+        run: echo "Hello, World!"
+
+      - name: Start HTTP Server
+        run: |
+          mkdir public
+          echo "<h1>Hello from GitHub Actions</h1>" > public/index.html
+          cd public
+          nohup python3 -m http.server 8080 &
+
+      - name: Install ngrok
+        run: |
+          curl -s https://ngrok-agent.s3.amazonaws.com/ngrok.asc | sudo tee /etc/apt/trusted.gpg.d/ngrok.asc >/dev/null
+          echo "deb https://ngrok-agent.s3.amazonaws.com buster main" | sudo tee /etc/apt/sources.list.d/ngrok.list
+          sudo apt update && sudo apt install ngrok
+
+      - name: Start ngrok tunnel
+        run: |
+          ngrok config add-authtoken 2xATPBWrqoYwjCqxDCwDSREw6ty_2GQpzV5nx9esMhcLH3UJ6
+          nohup ngrok http 8080 > ngrok.log 2>&1 &
+          sleep 10
+          curl http://localhost:4040/api/tunnels | tee tunnels.json
+          
